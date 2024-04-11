@@ -1,0 +1,44 @@
+{
+	"info": {
+		"_postman_id": "fcbd0488-eba5-4a38-957d-85dfa38e4f1e",
+		"name": "im.ly-webserver",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19451333"
+	},
+	"item": [
+		{
+			"name": "UrlShortenerApp",
+			"item": [
+				{
+					"name": "ShortenUrl",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"urlName\": \"Google\",\n    \"fullUrl\": \"https://www.google.com\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/shortenUrl/shortenUrl",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"shortenUrl",
+								"shortenUrl"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
