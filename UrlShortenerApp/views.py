@@ -16,7 +16,7 @@ class UrlShortenerView(viewsets.ModelViewSet):
         urlName = request.data.get('urlName')
         fullUrl = request.data.get('fullUrl')
 
-        base_url = request.build_absolute_uri('/')
+        # base_url = request.build_absolute_uri('/')
 
         try:
             urlObj, created = UrlShortener.objects.get_or_create(fullUrl=fullUrl)
@@ -24,23 +24,23 @@ class UrlShortenerView(viewsets.ModelViewSet):
             if created:
                 idgen = IDGenerator(8)
                 shortUrl = str(idgen.generate_id())
-                shortUrlDisplay = base_url + shortUrl
+                # shortUrlDisplay = base_url + shortUrl
 
                 urlObj.urlName = urlName
                 urlObj.shortenedUrl = shortUrl
 
                 urlObj.save()
 
-                urlObjSerialized = self.serializer_class(urlObj)
+                urlObjSerialized = self.serializer_class(urlObj, context={'request': request})
 
-                return Response({'status': 1, 'msg': "shortened url created", 'originalInput': urlObjSerialized.data, 'shortenedUrl': shortUrlDisplay}, status=status.HTTP_201_CREATED)
+                return Response({'status': 1, 'msg': "shortened url created", 'originalInput': urlObjSerialized.data}, status=status.HTTP_201_CREATED)
             else:
-                urlObjSerialized = self.serializer_class(urlObj)
+                urlObjSerialized = self.serializer_class(urlObj, context={'request': request})
 
                 shortUrl = urlObj.shortenedUrl
-                shortUrlDisplay = base_url + shortUrl
+                # shortUrlDisplay = base_url + shortUrl
 
-                return Response({'status': 2, 'msg': "shortened url already exists", 'originalInput': urlObjSerialized.data, 'shortenedUrl': shortUrlDisplay}, status=status.HTTP_200_OK)
+                return Response({'status': 2, 'msg': "shortened url already exists", 'originalInput': urlObjSerialized.data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -52,3 +52,13 @@ class UrlShortenerView(viewsets.ModelViewSet):
     
         # Perform the redirection
         return redirect(url_object.fullUrl)
+    
+    @action(detail=False, methods=['get'])
+    def getAllShortenedUrl(self, request):
+        try:
+            urlObj = UrlShortener.objects.all()
+            urlObjSerialized = self.serializer_class(urlObj, many=True, context={'request': request})
+
+            return Response({'status': 1, 'originalInput': urlObjSerialized.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
