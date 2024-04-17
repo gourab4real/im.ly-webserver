@@ -3,44 +3,47 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from UrlShortenerApp.models import UrlShortener
+from UrlShortenerApp.models import URL, UrlShortener
 from UrlShortenerApp.randomGen import IDGenerator
 from UrlShortenerApp.serializers import UrlShortenerSerializer
+
 
 class UrlShortenerView(viewsets.ModelViewSet):
     queryset = UrlShortener.objects.all()
     serializer_class = UrlShortenerSerializer
         
+    # Inefficient Code, need to re-write
     @action(detail=False, methods=['post'])
     def shortenUrl(self, request):
-        urlName = request.data.get('urlName')
-        fullUrl = request.data.get('fullUrl')
-
-        # base_url = request.build_absolute_uri('/')
+        url_name = request.data.get('urlName')
+        full_url = request.data.get('fullUrl')
 
         try:
-            urlObj, created = UrlShortener.objects.get_or_create(fullUrl=fullUrl)
+            url_obj, created = URL.objects.get_or_create(fullUrl=full_url)
 
             if created:
-                idgen = IDGenerator(8)
-                shortUrl = str(idgen.generate_id())
-                # shortUrlDisplay = base_url + shortUrl
+                url_obj.urlName = url_name
+                url_obj.save()
 
-                urlObj.urlName = urlName
-                urlObj.shortenedUrl = shortUrl
+            shortened_url_name = f"{url_name}-Shortened"
+            shortened_url_obj, created = UrlShortener.objects.get_or_create(shortenedUrlName=shortened_url_name)
 
-                urlObj.save()
-
-                urlObjSerialized = self.serializer_class(urlObj, context={'request': request})
-
-                return Response({'status': 1, 'msg': "shortened url created", 'originalInput': urlObjSerialized.data}, status=status.HTTP_201_CREATED)
+            if created:
+                short_url = IDGenerator(8).generate_id()
+                shortened_url_obj.url = url_obj
+                shortened_url_obj.shortenedUrl = short_url
+                shortened_url_obj.save()
+                status_code = status.HTTP_201_CREATED
+                msg = "shortened url created"
             else:
-                urlObjSerialized = self.serializer_class(urlObj, context={'request': request})
+                short_url = shortened_url_obj.shortenedUrl
+                status_code = status.HTTP_200_OK
+                msg = "shortened url already exists"
 
-                shortUrl = urlObj.shortenedUrl
-                # shortUrlDisplay = base_url + shortUrl
+            serialized_data = self.serializer_class(shortened_url_obj, context={'request': request}).data
 
-                return Response({'status': 2, 'msg': "shortened url already exists", 'originalInput': urlObjSerialized.data}, status=status.HTTP_200_OK)
+            return Response({'status': 1 if created else 2, 'msg': msg, 'originalInput': serialized_data}, status=status_code)
+
         except Exception as e:
             return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -51,7 +54,7 @@ class UrlShortenerView(viewsets.ModelViewSet):
         url_object = get_object_or_404(UrlShortener, shortenedUrl=short_url)
     
         # Perform the redirection
-        return redirect(url_object.fullUrl)
+        return redirect(url_object.url.fullUrl)
     
     @action(detail=False, methods=['get'])
     def getAllShortenedUrl(self, request):
