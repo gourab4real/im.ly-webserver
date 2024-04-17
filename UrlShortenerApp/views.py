@@ -10,6 +10,7 @@ from PIL import Image
 import base64
 
 from UrlShortenerApp.models import URL, UrlQrCode, UrlShortener
+from UrlShortenerApp.qrCodeGen import QRCodeGen
 from UrlShortenerApp.randomGen import IDGenerator
 from UrlShortenerApp.serializers import UrlQrCodeSerializer, UrlShortenerSerializer
 
@@ -72,6 +73,8 @@ class UrlShortenerView(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+# QRCode Generator
 class QrCodeHandler(viewsets.ModelViewSet):
     queryset = UrlQrCode.objects.all()
     serializer_class = UrlQrCodeSerializer
@@ -84,28 +87,7 @@ class QrCodeHandler(viewsets.ModelViewSet):
         url = urlObj.fullUrl
         qrCodeName = urlObj.urlName + "-qrCode"
 
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(url)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-
-        # Convert the PyPNGImage to a PIL Image
-        img_pil = img.get_image()
-        
-        # Create a BytesIO object to hold the image data
-        img_buffer = BytesIO()
-        # Save the PIL Image to the BytesIO object
-        img_pil.save(img_buffer, format='PNG')
-        # Seek to the beginning of the BytesIO object
-        img_buffer.seek(0)
-        img_data = img_buffer.read()
-
-        img_base64 = base64.b64encode(img_data).decode('utf-8')
+        img_base64 = QRCodeGen.generate_qr(url)
 
         obj, created = UrlQrCode.objects.get_or_create(url=urlObj, qrCode=img_base64)
 
