@@ -3,9 +3,15 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from UrlShortenerApp.models import URL, UrlShortener
+import qrcode
+import qrcode.image.svg
+from io import BytesIO
+from PIL import Image
+import base64
+
+from UrlShortenerApp.models import URL, UrlQrCode, UrlShortener
 from UrlShortenerApp.randomGen import IDGenerator
-from UrlShortenerApp.serializers import UrlShortenerSerializer
+from UrlShortenerApp.serializers import UrlQrCodeSerializer, UrlShortenerSerializer
 
 
 class UrlShortenerView(viewsets.ModelViewSet):
@@ -65,3 +71,54 @@ class UrlShortenerView(viewsets.ModelViewSet):
             return Response({'status': 1, 'originalInput': urlObjSerialized.data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class QrCodeHandler(viewsets.ModelViewSet):
+    queryset = UrlQrCode.objects.all()
+    serializer_class = UrlQrCodeSerializer
+
+    @action(detail=False, methods=['post'])
+    def addQrCode(self, request):
+        urlId = request.data.get('urlId')
+
+        urlObj = URL.objects.get(id=urlId)
+        url = urlObj.fullUrl
+        qrCodeName = urlObj.urlName + "-qrCode"
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        # Convert the PyPNGImage to a PIL Image
+        img_pil = img.get_image()
+        
+        # Create a BytesIO object to hold the image data
+        img_buffer = BytesIO()
+        # Save the PIL Image to the BytesIO object
+        img_pil.save(img_buffer, format='PNG')
+        # Seek to the beginning of the BytesIO object
+        img_buffer.seek(0)
+        img_data = img_buffer.read()
+
+        img_base64 = base64.b64encode(img_data).decode('utf-8')
+
+        obj, created = UrlQrCode.objects.get_or_create(url=urlObj, qrCode=img_base64)
+
+        if created:
+            obj.qrCodeName = qrCodeName
+            obj.qrCode = img_base64
+
+            obj.save()
+
+            objSerialized = self.serializer_class(obj)
+
+            return Response({'status': 1, 'msg': 'QrCode Generated', 'data': objSerialized.data}, status=status.HTTP_201_CREATED)
+        
+        objSerialized = self.serializer_class(obj)
+
+        return Response({'status': -1, 'msg': 'QrCode Already Exists', 'data': objSerialized.data}, status=status.HTTP_200_OK)

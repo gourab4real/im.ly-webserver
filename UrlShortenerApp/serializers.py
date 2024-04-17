@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ReadOnlyField
 
-from UrlShortenerApp.models import URL, UrlShortener
+from UrlShortenerApp.models import URL, UrlQrCode, UrlShortener
 
 class URLSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,3 +22,10 @@ class UrlShortenerSerializer(serializers.ModelSerializer):
     def get_shortenedUrl(self, instance):
         baseUrl = self.context['request'].build_absolute_uri('/')
         return baseUrl+instance.shortenedUrl
+    
+class UrlQrCodeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UrlQrCode
+        fields = '__all__'
+        depth = 2
