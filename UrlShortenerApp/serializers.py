@@ -17,7 +17,7 @@ class UrlShortenerSerializer(serializers.ModelSerializer):
     class Meta:
         model = UrlShortener
         fields = ['url', 'shortenedUrlName', 'shortenedUrl']
-        depth = 2
+        depth = 1
 
     def get_shortenedUrl(self, instance):
         baseUrl = self.context['request'].build_absolute_uri('/')

@@ -39,25 +39,33 @@ class UrlViewSet(viewsets.ModelViewSet):
             return Response({'status': 1, 'urlList': urlListSerialized}, status=status.HTTP_200_OK)
         except Exception as ex:
             return Response({'status': -1, 'msg': f'Something went wrong ({ex})'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'])
+    def getUrlById(self, request):
+        urlId = request.data.get('urlId')
+
+        try:
+            urlObj = URL.objects.get(id=urlId)
+            urlObjSerialized = self.serializer_class(urlObj)
+
+            return Response({'status': 1, 'urlDetails': urlObjSerialized}, status=status.HTTP_200_OK)
+        except URL.DoesNotExist as ex:
+            return Response({'status': -1, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': -2, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class UrlShortenerView(viewsets.ModelViewSet):
     queryset = UrlShortener.objects.all()
     serializer_class = UrlShortenerSerializer
         
-    # Inefficient Code, need to re-write
     @action(detail=False, methods=['post'])
     def shortenUrl(self, request):
-        url_name = request.data.get('urlName')
-        full_url = request.data.get('fullUrl')
+        urlId = request.data.get('urlId')
 
         try:
-            url_obj, created = URL.objects.get_or_create(fullUrl=full_url)
+            url_obj = URL.objects.get(id=urlId)
 
-            if created:
-                url_obj.urlName = url_name
-                url_obj.save()
-
-            shortened_url_name = f"{url_name}-Shortened"
+            shortened_url_name = f"{url_obj.urlName}-Shortened"
             shortened_url_obj, created = UrlShortener.objects.get_or_create(shortenedUrlName=shortened_url_name)
 
             if created:
@@ -75,7 +83,8 @@ class UrlShortenerView(viewsets.ModelViewSet):
             serialized_data = self.serializer_class(shortened_url_obj, context={'request': request}).data
 
             return Response({'status': 1 if created else 2, 'msg': msg, 'originalInput': serialized_data}, status=status_code)
-
+        except URL.DoesNotExist as ex:
+            return Response({'status': -2, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -97,6 +106,20 @@ class UrlShortenerView(viewsets.ModelViewSet):
             return Response({'status': 1, 'originalInput': urlObjSerialized.data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': -1, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'])
+    def getShortenedUrlById(self, request):
+        shortenedUrlId = request.data.get('shortenedUrlId')
+
+        try:
+            urlShortenerObj = UrlShortener.objects.get(id=shortenedUrlId)
+            urlShortenerObjSerialized = self.serializer_class(urlShortenerObj)
+
+            return Response({'status': 1, 'shortenedUrlDetails': urlShortenerObjSerialized}, status=status.HTTP_200_OK)
+        except UrlShortener.DoesNotExist as ex:
+            return Response({'status': -1, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': -2, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # QRCode Generator
