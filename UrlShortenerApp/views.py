@@ -3,17 +3,42 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-import qrcode
-import qrcode.image.svg
-from io import BytesIO
-from PIL import Image
-import base64
-
 from UrlShortenerApp.models import URL, UrlQrCode, UrlShortener
 from UrlShortenerApp.qrCodeGen import QRCodeGen
 from UrlShortenerApp.randomGen import IDGenerator
-from UrlShortenerApp.serializers import UrlQrCodeSerializer, UrlShortenerSerializer
+from UrlShortenerApp.serializers import URLSerializer, UrlQrCodeSerializer, UrlShortenerSerializer
 
+
+class UrlViewSet(viewsets.ModelViewSet):
+    queryset = URL.objects.all()
+    serializer_class = URLSerializer
+
+    @action(detail=False, methods=['post'])
+    def addUrl(self, request):
+        urlName = request.data.get('urlName')
+        fullUrl = request.data.get('fullUrl')
+
+        try:
+            urlObj, created = URL.objects.get_or_create(fullUrl=fullUrl)
+
+            if created:
+                urlObj.urlName = urlName
+                urlObj.save()
+
+                return Response({'status': 1, 'msg': 'Url added successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'status': 2, 'msg': 'Url already exists'}, status=status.HTTP_200_OK)
+        except Exception as ex:
+            return Response({'status': -1, 'msg': f'Something went wrong ({ex})'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def getUrlList(self, request):
+        try:
+            urlList = URL.objects.all()
+            urlListSerialized = self.serializer_class(urlList, many=True)
+
+            return Response({'status': 1, 'urlList': urlListSerialized}, status=status.HTTP_200_OK)
+        except Exception as ex:
+            return Response({'status': -1, 'msg': f'Something went wrong ({ex})'}, status=status.HTTP_400_BAD_REQUEST)
 
 class UrlShortenerView(viewsets.ModelViewSet):
     queryset = UrlShortener.objects.all()
