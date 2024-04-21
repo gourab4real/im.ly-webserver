@@ -10,13 +10,120 @@
 			"name": "UrlShortenerApp",
 			"item": [
 				{
+					"name": "AddUrl",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"urlName\": \"Django Getting Start\",\n    \"fullUrl\": \"https://www.djangoproject.com/start/\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/url/addUrl",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"url",
+								"addUrl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetUrlList",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/url/getUrlList",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"url",
+								"getUrlList"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetUrlById",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"urlId\": \"1\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/url/getUrlById",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"url",
+								"getUrlById"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetUrlByFullUrl",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullUrl\": \"https://www.djangoproject.com/start/\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/url/getUrlByFullUrl",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"url",
+								"getUrlByFullUrl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "ShortenUrl",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"urlName\": \"Google\",\n    \"fullUrl\": \"https://www.google.com\"\n}\n",
+							"raw": "{\n    \"urlId\": \"1\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -33,6 +140,196 @@
 								"api",
 								"shortenUrl",
 								"shortenUrl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetAllShortenUrl",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/shortenUrl/getAllShortenedUrl",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"shortenUrl",
+								"getAllShortenedUrl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetShortenUrlById",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"shortenedUrlId\": \"1\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/shortenUrl/getShortenedUrlById",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"shortenUrl",
+								"getShortenedUrlById"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetShortenUrlByFullUrl",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullUrl\": \"https://www.djangoproject.com/start/\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/urlshortenerapp/api/shortenUrl/getShortenedUrlByFullUrl",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"urlshortenerapp",
+								"api",
+								"shortenUrl",
+								"getShortenedUrlByFullUrl"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "QrCodeApp",
+			"item": [
+				{
+					"name": "CreateQrCode",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"urlId\": \"1\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/qrcodeapp/api/qrCodeUrl/addQrCode",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"qrcodeapp",
+								"api",
+								"qrCodeUrl",
+								"addQrCode"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetAllQrCode",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{serverUrl}}/qrcodeapp/api/qrCodeUrl/getQrCodeList",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"qrcodeapp",
+								"api",
+								"qrCodeUrl",
+								"getQrCodeList"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetQrCodeById",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"qrCodeId\": \"1\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/qrcodeapp/api/qrCodeUrl/getQrCodeById",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"qrcodeapp",
+								"api",
+								"qrCodeUrl",
+								"getQrCodeById"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetQrCodeByFullUrl",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullUrl\": \"https://www.djangoproject.com/start/\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{serverUrl}}/qrcodeapp/api/qrCodeUrl/getQrCodeByFullUrl",
+							"host": [
+								"{{serverUrl}}"
+							],
+							"path": [
+								"qrcodeapp",
+								"api",
+								"qrCodeUrl",
+								"getQrCodeByFullUrl"
 							]
 						}
 					},
