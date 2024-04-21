@@ -6,5 +6,6 @@ from UrlShortenerApp.views import UrlShortenerView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(r'urlshortenerapp/', include('UrlShortenerApp.urls')),
-    path(r'<str:short_url>', UrlShortenerView.redirect_original_url)
+    path(r'<str:short_url>', UrlShortenerView.redirect_original_url),
+    path(r'qrcodeapp/', include('QrCodeApp.urls')),
 ]

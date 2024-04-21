@@ -3,10 +3,9 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from UrlShortenerApp.models import URL, UrlQrCode, UrlShortener
-from UrlShortenerApp.qrCodeGen import QRCodeGen
+from UrlShortenerApp.models import URL, UrlShortener
 from UrlShortenerApp.randomGen import IDGenerator
-from UrlShortenerApp.serializers import URLSerializer, UrlQrCodeSerializer, UrlShortenerSerializer
+from UrlShortenerApp.serializers import URLSerializer, UrlShortenerSerializer
 
 
 class UrlViewSet(viewsets.ModelViewSet):
@@ -36,7 +35,7 @@ class UrlViewSet(viewsets.ModelViewSet):
             urlList = URL.objects.all()
             urlListSerialized = self.serializer_class(urlList, many=True)
 
-            return Response({'status': 1, 'urlList': urlListSerialized}, status=status.HTTP_200_OK)
+            return Response({'status': 1, 'urlList': urlListSerialized.data}, status=status.HTTP_200_OK)
         except Exception as ex:
             return Response({'status': -1, 'msg': f'Something went wrong ({ex})'}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -48,7 +47,21 @@ class UrlViewSet(viewsets.ModelViewSet):
             urlObj = URL.objects.get(id=urlId)
             urlObjSerialized = self.serializer_class(urlObj)
 
-            return Response({'status': 1, 'urlDetails': urlObjSerialized}, status=status.HTTP_200_OK)
+            return Response({'status': 1, 'urlDetails': urlObjSerialized.data}, status=status.HTTP_200_OK)
+        except URL.DoesNotExist as ex:
+            return Response({'status': -1, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': -2, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'])
+    def getUrlByFullUrl(self, request):
+        fullUrl = request.data.get('fullUrl')
+
+        try:
+            urlObj = URL.objects.get(fullUrl=fullUrl)
+            urlObjSerialized = self.serializer_class(urlObj)
+
+            return Response({'status': 1, 'urlDetails': urlObjSerialized.data}, status=status.HTTP_200_OK)
         except URL.DoesNotExist as ex:
             return Response({'status': -1, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -113,42 +126,25 @@ class UrlShortenerView(viewsets.ModelViewSet):
 
         try:
             urlShortenerObj = UrlShortener.objects.get(id=shortenedUrlId)
-            urlShortenerObjSerialized = self.serializer_class(urlShortenerObj)
+            urlShortenerObjSerialized = self.serializer_class(urlShortenerObj, context={'request': request})
 
-            return Response({'status': 1, 'shortenedUrlDetails': urlShortenerObjSerialized}, status=status.HTTP_200_OK)
+            return Response({'status': 1, 'shortenedUrlDetails': urlShortenerObjSerialized.data}, status=status.HTTP_200_OK)
         except UrlShortener.DoesNotExist as ex:
             return Response({'status': -1, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status': -2, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# QRCode Generator
-class QrCodeHandler(viewsets.ModelViewSet):
-    queryset = UrlQrCode.objects.all()
-    serializer_class = UrlQrCodeSerializer
-
+    
     @action(detail=False, methods=['post'])
-    def addQrCode(self, request):
-        urlId = request.data.get('urlId')
+    def getShortenedUrlByFullUrl(self, request):
+        fullUrl = request.data.get('fullUrl')
 
-        urlObj = URL.objects.get(id=urlId)
-        url = urlObj.fullUrl
-        qrCodeName = urlObj.urlName + "-qrCode"
+        try:
+            urlObj = URL.objects.get(fullUrl=fullUrl)
+            urlShortenerObj = UrlShortener.objects.get(url=urlObj)
+            urlShortenerObjSerialized = self.serializer_class(urlShortenerObj, context={'request': request})
 
-        img_base64 = QRCodeGen.generate_qr(url)
-
-        obj, created = UrlQrCode.objects.get_or_create(url=urlObj, qrCode=img_base64)
-
-        if created:
-            obj.qrCodeName = qrCodeName
-            obj.qrCode = img_base64
-
-            obj.save()
-
-            objSerialized = self.serializer_class(obj)
-
-            return Response({'status': 1, 'msg': 'QrCode Generated', 'data': objSerialized.data}, status=status.HTTP_201_CREATED)
-        
-        objSerialized = self.serializer_class(obj)
-
-        return Response({'status': -1, 'msg': 'QrCode Already Exists', 'data': objSerialized.data}, status=status.HTTP_200_OK)
+            return Response({'status': 1, 'shortenedUrlDetails': urlShortenerObjSerialized.data}, status=status.HTTP_200_OK)
+        except UrlShortener.DoesNotExist as ex:
+            return Response({'status': -1, 'msg': "URL does not exists", 'err': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': -2, 'msg': "Something went wrong", 'err': str(e)}, status=status.HTTP_400_BAD_REQUEST)
