@@ -3,6 +3,9 @@ from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+
 from UrlShortenerApp.models import URL, UrlShortener
 from UrlShortenerApp.randomGen import IDGenerator
 from UrlShortenerApp.serializers import URLSerializer, UrlShortenerSerializer
@@ -17,7 +20,9 @@ class UrlViewSet(viewsets.ModelViewSet):
         urlName = request.data.get('urlName')
         fullUrl = request.data.get('fullUrl')
 
+        val = URLValidator()
         try:
+            val(fullUrl)
             urlObj, created = URL.objects.get_or_create(fullUrl=fullUrl)
 
             if created:
@@ -26,6 +31,8 @@ class UrlViewSet(viewsets.ModelViewSet):
 
                 return Response({'status': 1, 'msg': 'Url added successfully'}, status=status.HTTP_201_CREATED)
             return Response({'status': 2, 'msg': 'Url already exists'}, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response({'status': -2, 'msg': f'Invalid website: {e}'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
             return Response({'status': -1, 'msg': f'Something went wrong ({ex})'}, status=status.HTTP_400_BAD_REQUEST)
     
