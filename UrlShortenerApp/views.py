@@ -81,9 +81,17 @@ class UrlShortenerView(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def shortenUrl(self, request):
         urlId = request.data.get('urlId')
+        fullUrl = request.data.get('fullUrl')
 
         try:
-            url_obj = URL.objects.get(id=urlId)
+            if urlId and not(fullUrl):
+                url_obj = URL.objects.get(id=urlId)
+            elif fullUrl and not(urlId):
+                url_obj = URL.objects.get(fullUrl=fullUrl)
+            elif fullUrl and urlId:
+                url_obj = URL.objects.get(id=urlId, fullUrl=fullUrl)
+            else:
+                return Response({'status': -3, 'msg': 'There is no payload in the body'}, status=status.HTTP_400_BAD_REQUEST)
 
             shortened_url_name = f"{url_obj.urlName}-Shortened"
             shortened_url_obj, created = UrlShortener.objects.get_or_create(shortenedUrlName=shortened_url_name)

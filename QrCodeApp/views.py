@@ -14,28 +14,42 @@ class QrCodeHandler(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def addQrCode(self, request):
         urlId = request.data.get('urlId')
+        fullUrl = request.data.get('fullUrl')
 
-        urlObj = URL.objects.get(id=urlId)
-        url = urlObj.fullUrl
-        qrCodeName = urlObj.urlName + "-qrCode"
+        try:
+            if urlId and not(fullUrl):
+                urlObj = URL.objects.get(id=urlId)
+            elif fullUrl and not(urlId):
+                urlObj = URL.objects.get(fullUrl=fullUrl)
+            elif fullUrl and urlId:
+                urlObj = URL.objects.get(id=urlId, fullUrl=fullUrl)
+            else:
+                return Response({'status': -2, 'msg': 'There is no payload in the body'}, status=status.HTTP_400_BAD_REQUEST)
 
-        img_base64 = QRCodeGen.generate_qr(url)
+            url = urlObj.fullUrl
+            qrCodeName = urlObj.urlName + "-qrCode"
 
-        obj, created = UrlQrCode.objects.get_or_create(url=urlObj, qrCode=img_base64)
+            img_base64 = QRCodeGen.generate_qr(url)
 
-        if created:
-            obj.qrCodeName = qrCodeName
-            obj.qrCode = img_base64
+            obj, created = UrlQrCode.objects.get_or_create(url=urlObj, qrCode=img_base64)
 
-            obj.save()
+            if created:
+                obj.qrCodeName = qrCodeName
+                obj.qrCode = img_base64
 
+                obj.save()
+
+                objSerialized = self.serializer_class(obj)
+
+                return Response({'status': 1, 'msg': 'QrCode Generated', 'data': objSerialized.data}, status=status.HTTP_201_CREATED)
+        
             objSerialized = self.serializer_class(obj)
 
-            return Response({'status': 1, 'msg': 'QrCode Generated', 'data': objSerialized.data}, status=status.HTTP_201_CREATED)
-        
-        objSerialized = self.serializer_class(obj)
-
-        return Response({'status': -1, 'msg': 'QrCode Already Exists', 'data': objSerialized.data}, status=status.HTTP_200_OK)
+            return Response({'status': -1, 'msg': 'QrCode Already Exists', 'data': objSerialized.data}, status=status.HTTP_200_OK)
+        except URL.DoesNotExist as e:
+            return Response({'status': -3, 'msg': str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as ex:
+            return Response({'status': -4, 'msg': f"Something went wrong: {ex}"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
     def getQrCodeList(self, request):
