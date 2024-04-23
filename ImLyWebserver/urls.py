@@ -5,7 +5,10 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 from UrlShortenerApp.views import UrlShortenerView
+from UserApp.views import CreateUserView, LogoutView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -22,6 +25,12 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path(r'api/token/', TokenObtainPairView.as_view(), name="access_token"),
+    path(r'api/token/refresh', TokenRefreshView.as_view(), name="refresh_token"),
+    path(r'api-auth/', include("rest_framework.urls")),
+    path(r'api/user/register/', CreateUserView.as_view(), name="register"),
+    path(r'api/logout/', LogoutView.as_view()),
 
     path(r'swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path(r'redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
